@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
             icon: Icon(Icons.verified_user),
             onPressed: () {
               Navigator.push(
-                context, 
+                context,
                 MaterialPageRoute(builder: (context) => LoginPage()),
               );
             },
@@ -44,14 +44,14 @@ class HomeScreen extends StatelessWidget {
             // Barra de búsqueda
             TextField(
               decoration: InputDecoration(
-                hintText: "Search",
+                hintText: "Buscar...",
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
             SizedBox(height: 20),
 
-            // Sección de "Clearance Sales"
+            // Sección de "Descuentos"
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -68,26 +68,26 @@ class HomeScreen extends StatelessWidget {
                       Text("Hasta 50%", style: TextStyle(color: Colors.white)),
                     ],
                   ),
-                  Container(
-                    width: 80, // Aquí sí se puede usar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
                     child: Image.asset(
-                      'assets/full.jpg', 
-                      width: 100,
-                      height: 100,
+                      'assets/full.jpg',
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ],
               ),
             ),
-
             SizedBox(height: 20),
 
             // Categorías
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Categories", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                TextButton(onPressed: () {}, child: Text("See all")),
+                Text("Categorías", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                TextButton(onPressed: () {}, child: Text("Ver todo")),
               ],
             ),
             SingleChildScrollView(
@@ -109,7 +109,7 @@ class HomeScreen extends StatelessWidget {
               physics: NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.7,
+                childAspectRatio: 0.75,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
               ),
@@ -118,9 +118,8 @@ class HomeScreen extends StatelessWidget {
                 return ProductCard(
                   title: index % 2 == 0 ? "Guppy Metal Red Lace" : "Guppy Koi Red Ears",
                   price: index % 2 == 0 ? "\$132.00" : "\$1100.00",
-                  imageUrl: index % 2 == 0
-                      ? "assets/logo.jpg"  // Ruta de imagen local
-                      : "assets/logo.jpg",  // Ruta de imagen local
+                  imageUrl: "assets/Metal.jpg",
+                  inStock: index % 2 == 0, // Alternar stock
                 );
               },
             ),
@@ -129,41 +128,70 @@ class HomeScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Favorites"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Inicio"),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Buscar"),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Favoritos"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
         ],
       ),
     );
   }
 }
 
-// Tarjeta de Producto
+// Tarjeta de Producto con stock
 class ProductCard extends StatelessWidget {
   final String title;
   final String price;
   final String imageUrl;
+  final bool inStock;
 
-  ProductCard({required this.title, required this.price, required this.imageUrl});
+  ProductCard({required this.title, required this.price, required this.imageUrl, required this.inStock});
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Image.asset(imageUrl, fit: BoxFit.cover), // Usando imagen local
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            child: Image.asset(
+              imageUrl,
+              width: double.infinity,
+              height: 120,
+              fit: BoxFit.cover,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Título
                 Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 4),
-                Text(price, style: TextStyle(color: Colors.red)),
+                
+                SizedBox(height: 8),
+
+                // Precio
+                Text(price, style: TextStyle(color: Colors.red, fontSize: 16)),
+
+                SizedBox(height: 0),
+
+                // Botón de Stock
+                Container(
+                  width: 120, 
+                  height: 20, 
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: inStock ? const Color.fromARGB(255, 157, 199, 158) : const Color.fromARGB(255, 236, 132, 125),
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {},
+                    child: Text(inStock ? "En Stock" : "Agotado"),
+                  ),
+                ),
               ],
             ),
           ),
