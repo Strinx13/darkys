@@ -7,7 +7,7 @@ class DatabaseHelper {
       port: 3306,
       user: 'darkysfi_admin',  
       password: 'Absolet1.',  
-      db: 'darkysfi_proyecto',
+      db: 'darkysfi_base2',
     );
     return await MySqlConnection.connect(settings);
   }

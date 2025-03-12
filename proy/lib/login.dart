@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mysql1/mysql1.dart';
+import 'package:bcrypt/bcrypt.dart';
 import 'package:proy/db_connection.dart';
+import 'register.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -17,7 +19,7 @@ class _LoginPageState extends State<LoginPage> {
       conn = await DatabaseHelper.connect(); // Se obtiene la conexión
 
       var results = await conn.query(
-        'SELECT * FROM users WHERE email = ? AND password = ?',
+        'SELECT * FROM ec_customers WHERE email = ? AND password = ?',
         [_emailController.text, _passwordController.text],
       );
 
@@ -101,7 +103,10 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(height: 20),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/register');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RegisterPage()),
+                        );
                       },
                       child: Text(
                         '¿No tienes una cuenta? Regístrate aquí',

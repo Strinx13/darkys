@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mysql1/mysql1.dart';
+import 'package:bcrypt/bcrypt.dart';
+import 'package:proy/db_connection.dart';
+import 'login.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -8,18 +12,48 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _birthYearController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  void _register() {
-    // Aquí puedes agregar la lógica para el registro
-    // Simulamos un registro exitoso
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Registro exitoso.'),
-    ));
-    // Redirigir a la página de login después del registro
-    Navigator.pushReplacementNamed(context, '/login');
+  final _confirmPasswordController = TextEditingController();
+
+  Future<void> _register() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Las contraseñas no coinciden.')),
+      );
+      return;
+    }
+
+    // Encriptar la contraseña con bcrypt
+    String hashedPassword = BCrypt.hashpw(_passwordController.text, BCrypt.gensalt());
+
+    MySqlConnection? conn;
+    try {
+      conn = await DatabaseHelper.connect();
+
+      await conn.query(
+        '''INSERT INTO ec_customers (id, name, email, password, avatar, dob, phone, remember_token, created_at, updated_at, confirmed_at, email_verify_token) 
+           VALUES (NULL, ?, ?, ?, NULL, NULL, ?, NULL, NOW(), NOW(), NOW(), NULL)''',
+        [
+          _nameController.text,
+          _emailController.text,
+          hashedPassword, // Contraseña encriptada
+          _phoneController.text,
+        ],
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Registro exitoso.')),
+      );
+
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al registrar usuario: $e')),
+      );
+    } finally {
+      await conn?.close();
+    }
   }
 
   @override
@@ -27,77 +61,54 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Imagen de fondo
           Positioned.fill(
-            child: Image.asset(
-              'assets/fondo.jpg', // Ruta de la imagen de fondo
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/fondo.jpg', fit: BoxFit.cover),
           ),
-          // Cuadro con el formulario alineado hacia abajo
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
               padding: EdgeInsets.all(16.0),
               width: double.infinity,
-              height: 750,// Ajusta la altura del cuadro del formulario
+              height: 750,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7), // Fondo oscuro para el cuadro
+                color: Colors.black.withOpacity(0.7),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30.0),
                   topRight: Radius.circular(30.0),
                 ),
               ),
-              child: SingleChildScrollView( // Hacemos el contenido desplazable
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // Logo centrado y circular
                     CircleAvatar(
-                      radius: 50, // Tamaño del logo
-                      backgroundImage: AssetImage('assets/logo.jpg')
+                      radius: 50,
+                      backgroundImage: AssetImage('assets/logo.jpg'),
                     ),
                     SizedBox(height: 20),
-                    // División visual (línea)
-                    Divider(
-                      color: Colors.white,
-                      thickness: 2,
-                      indent: 50,
-                      endIndent: 50,
-                    ),
+                    Divider(color: Colors.white, thickness: 2, indent: 50, endIndent: 50),
                     SizedBox(height: 20),
-                    // Título "Registrarse" dentro del formulario
-                    Text(
-                      'Registrarse',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text('Registrarse', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                     SizedBox(height: 20),
                     _buildTextField(_nameController, 'Nombre completo'),
                     _buildTextField(_emailController, 'Correo electrónico'),
-                    _buildTextField(_birthYearController, 'Año de nacimiento'),
                     _buildTextField(_phoneController, 'Número de teléfono'),
                     _buildTextField(_passwordController, 'Contraseña', obscureText: true),
+                    _buildTextField(_confirmPasswordController, 'Confirmar contraseña', obscureText: true),
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _register,
                       child: Text('Registrarse'),
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(Colors.blueAccent),
-                      ),
+                      style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.blueAccent)),
                     ),
                     SizedBox(height: 20),
                     TextButton(
                       onPressed: () {
-                        // Redirige a la página de login
-                        Navigator.pushNamed(context, '/login');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder:  (context) => LoginPage()), 
+                        );
                       },
-                      child: Text(
-                        '¿Ya tienes una cuenta? Inicia sesión aquí',
-                        style: TextStyle(color: Colors.blueAccent),
-                      ),
+                      child: Text('¿Ya tienes una cuenta? Inicia sesión aquí', style: TextStyle(color: Colors.blueAccent)),
                     ),
                   ],
                 ),
@@ -119,9 +130,7 @@ class _RegisterPageState extends State<RegisterPage> {
           labelText: label,
           fillColor: Colors.grey[800],
           filled: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0), // Bordes redondeados
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30.0),
             borderSide: BorderSide(color: Colors.grey, width: 1),
