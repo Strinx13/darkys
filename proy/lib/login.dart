@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mysql1/mysql1.dart';
+import 'package:proy/db_connection.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -8,15 +10,34 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  void _login() {
-    // Aquí puedes agregar la lógica para el inicio de sesión
-    // Simulamos un inicio de sesión exitoso
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Inicio de sesión exitoso.'),
-    ));
-    // Redirigir a la página principal después del inicio de sesión
-    Navigator.pushReplacementNamed(context, '/home');
+
+  Future<void> _login() async {
+    MySqlConnection? conn;
+    try {
+      conn = await DatabaseHelper.connect(); // Se obtiene la conexión
+
+      var results = await conn.query(
+        'SELECT * FROM users WHERE email = ? AND password = ?',
+        [_emailController.text, _passwordController.text],
+      );
+
+      if (results.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Inicio de sesión exitoso.'),
+        ));
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Correo o contraseña incorrectos.'),
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error de conexión: $e'),
+      ));
+    } finally {
+      await conn?.close(); // Se cierra la conexión
+    }
   }
 
   @override
@@ -24,37 +45,33 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Imagen de fondo
           Positioned.fill(
             child: Image.asset(
-              'assets/fondo.jpg', // Ruta de la imagen de fondo
+              'assets/fondo.jpg',
               fit: BoxFit.cover,
             ),
           ),
-          // Cuadro con el formulario alineado hacia abajo
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
               padding: EdgeInsets.all(16.0),
               width: double.infinity,
-              height: 600, // Ajusta la altura del cuadro del formulario
+              height: 600,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7), // Fondo oscuro para el cuadro
+                color: Colors.black.withOpacity(0.7),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30.0),
                   topRight: Radius.circular(30.0),
                 ),
               ),
-              child: SingleChildScrollView( // Hacemos el contenido desplazable
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // Logo centrado y circular
                     CircleAvatar(
-                      radius: 50, // Tamaño del logo
-                      backgroundImage: AssetImage('assets/logo.jpg')
+                      radius: 50,
+                      backgroundImage: AssetImage('assets/logo.jpg'),
                     ),
                     SizedBox(height: 20),
-                    // División visual (línea)
                     Divider(
                       color: Colors.white,
                       thickness: 2,
@@ -62,7 +79,6 @@ class _LoginPageState extends State<LoginPage> {
                       endIndent: 50,
                     ),
                     SizedBox(height: 20),
-                    // Título "Iniciar sesión" dentro del formulario
                     Text(
                       'Iniciar sesión',
                       style: TextStyle(
@@ -85,7 +101,6 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(height: 20),
                     TextButton(
                       onPressed: () {
-                        // Redirige a la página de registro
                         Navigator.pushNamed(context, '/register');
                       },
                       child: Text(
@@ -114,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
           fillColor: Colors.grey[800],
           filled: true,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0), // Bordes redondeados
+            borderRadius: BorderRadius.circular(30.0),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30.0),

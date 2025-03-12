@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login.dart';
 
 void main() {
   runApp(MyApp());
@@ -22,8 +23,13 @@ class HomeScreen extends StatelessWidget {
         title: Text('Darky´s', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications_none),
-            onPressed: () {},
+            icon: Icon(Icons.verified_user),
+            onPressed: () {
+              Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
           ),
         ],
         backgroundColor: Colors.white,
