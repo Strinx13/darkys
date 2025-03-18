@@ -3,6 +3,8 @@ import 'package:mysql1/mysql1.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:proy/db_connection.dart';
 import 'register.dart';
+import 'main.dart';
+import'forgot_password.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -19,20 +21,29 @@ class _LoginPageState extends State<LoginPage> {
       conn = await DatabaseHelper.connect(); // Se obtiene la conexión
 
       var results = await conn.query(
-        'SELECT * FROM ec_customers WHERE email = ? AND password = ?',
-        [_emailController.text, _passwordController.text],
+        'SELECT password FROM ec_customers WHERE email = ?',
+        [_emailController.text],
       );
 
       if (results.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Inicio de sesión exitoso.'),
-        ));
-        Navigator.pushReplacementNamed(context, '/home');
+        var storedHashedPassword = results.first[0]; // Obtiene la contraseña encriptada
+        if (BCrypt.checkpw(_passwordController.text, storedHashedPassword)) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Inicio de sesión exitoso.'),
+          ));
+          Navigator.push(context, 
+          MaterialPageRoute(builder: (context) => HomeScreen()));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Correo o contraseña incorrectos.'),
+          ));
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Correo o contraseña incorrectos.'),
         ));
       }
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Error de conexión: $e'),
@@ -101,6 +112,18 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                        );
+                      },
+                      child: Text(
+                        '¿Olvidaste tu contraseña?',
+                        style: TextStyle(color: Colors.blueAccent),
+                      ),
+                    ),
                     TextButton(
                       onPressed: () {
                         Navigator.push(

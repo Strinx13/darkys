@@ -46,7 +46,8 @@ class _RegisterPageState extends State<RegisterPage> {
         SnackBar(content: Text('Registro exitoso.')),
       );
 
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.push(context,
+      MaterialPageRoute(builder: (context) => LoginPage()));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al registrar usuario: $e')),
