@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:proy/mainScreen.dart';
 import 'login.dart';
+import 'product.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -10,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      home: MainScreen(),
     );
   }
 }
@@ -105,24 +108,35 @@ class HomeScreen extends StatelessWidget {
 
             // Productos en cuadrícula
             GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: 4, // Puedes reemplazar con el total de productos
-              itemBuilder: (context, index) {
-                return ProductCard(
-                  title: index % 2 == 0 ? "Guppy Metal Red Lace" : "Guppy Koi Red Ears",
-                  price: index % 2 == 0 ? "\$132.00" : "\$1100.00",
-                  imageUrl: "assets/Metal.jpg",
-                  inStock: index % 2 == 0, // Alternar stock
-                );
-              },
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
             ),
+            itemCount: 4, // Puedes reemplazar con el total de productos
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProductScreen(),
+          ),
+        );
+      },
+      child: ProductCard(
+        title: index % 2 == 0 ? "Guppy Metal Red Lace" : "Guppy Koi Red Ears",
+        price: index % 2 == 0 ? "\$132.00" : "\$1100.00",
+        imageUrl: "assets/Metal.jpg",
+        inStock: index % 2 == 0, // Alternar stock
+      ),
+    );
+  },
+),
+
           ],
         ),
       ),
