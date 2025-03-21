@@ -57,6 +57,11 @@ flutter:
     - assets/Metal.jpg
     - assets/logo.jpg
     - assets/full.jpg
+    - assets/chip.png
+    - assets/mastercard.png
+    - assets/card.png
+    - assets/paypal.png
+    - assets/applepay.png
 
 
   # The following line ensures that the Material Icons font is
