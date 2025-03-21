@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
   @override
@@ -265,8 +266,11 @@ class _CartScreenState extends State<CartScreen> {
                       SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Compra realizada con éxito')),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CheckoutScreen(),
+                            ),
                           );
                         },
                         child: Text(
@@ -278,7 +282,7 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.green,
                           minimumSize: Size(double.infinity, 54),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
