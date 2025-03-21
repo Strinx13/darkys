@@ -1,6 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:mysql1/mysql1.dart';
+import 'package:proy/db_connection.dart';
+import 'package:provider/provider.dart';
+import 'package:proy/app_state.dart';
+import 'package:proy/mainScreen.dart';
+import 'profile_edit_screen.dart';
 
-class MoreScreen extends StatelessWidget {
+class MoreScreen extends StatefulWidget {
+  @override
+  _MoreScreenState createState() => _MoreScreenState();
+}
+
+class _MoreScreenState extends State<MoreScreen> {
+  Map<String, dynamic>? userData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    if (!appState.isLoggedIn) return;
+
+    MySqlConnection? conn;
+    try {
+      conn = await DatabaseHelper.connect();
+      var results = await conn.query(
+        'SELECT name, email, phone, avatar FROM ec_customers WHERE id = ?',
+        [1], // Aquí deberías usar el ID del usuario actual desde appState
+      );
+
+      if (results.isNotEmpty) {
+        setState(() {
+          userData = {
+            'name': results.first['name'],
+            'email': results.first['email'],
+            'phone': results.first['phone'],
+            'avatar': results.first['avatar'],
+          };
+        });
+      }
+    } catch (e) {
+      print('Error al cargar datos del usuario: $e');
+    } finally {
+      await conn?.close();
+    }
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    await appState.logout();
+
+    // Navegar al MainScreen después de cerrar sesión
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => MainScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,7 +73,7 @@ class MoreScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'More',
+          'Más',
           style: TextStyle(
             color: Colors.black,
             fontSize: 20,
@@ -25,36 +85,55 @@ class MoreScreen extends StatelessWidget {
         child: Column(
           children: [
             // Sección de perfil
-            Container(
-              padding: EdgeInsets.all(20),
-              color: Colors.white,
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundImage: AssetImage('assets/logo.jpg'),
-                  ),
-                  SizedBox(width: 15),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'John Doe',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => ProfileEditScreen(
+                          userData: userData,
+                          onProfileUpdated: _loadUserData,
                         ),
-                      ),
-                      Text(
-                        'john.doe@example.com',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
                   ),
-                ],
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.all(20),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundImage:
+                          userData?['avatar'] != null
+                              ? NetworkImage(userData!['avatar'])
+                              : AssetImage('assets/logo.jpg') as ImageProvider,
+                    ),
+                    SizedBox(width: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userData?['name'] ?? 'Usuario',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          userData?['email'] ?? 'correo@ejemplo.com',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Spacer(),
+                    Icon(Icons.edit, color: Colors.grey),
+                  ],
+                ),
               ),
             ),
             SizedBox(height: 20),
@@ -103,9 +182,9 @@ class MoreScreen extends StatelessWidget {
             ),
             _buildOptionItem(
               icon: Icons.logout,
-              title: 'Logout',
+              title: 'Cerrar sesión',
               subtitle: 'Salir de esta cuenta',
-              onTap: () {},
+              onTap: () => _logout(context),
             ),
           ],
         ),
@@ -136,21 +215,15 @@ class MoreScreen extends StatelessWidget {
         leading: Icon(icon, color: Colors.blue),
         title: Text(
           title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14,
-          ),
+          style: TextStyle(color: Colors.grey[600], fontSize: 14),
         ),
         trailing: Icon(Icons.chevron_right, color: Colors.grey),
         onTap: onTap,
       ),
     );
   }
-} 
+}

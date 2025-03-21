@@ -22,26 +22,37 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-            
+
             // Información del usuario
-            Text("Nombre:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              "Nombre:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             Text("Juan Pérez", style: TextStyle(fontSize: 16)),
             SizedBox(height: 10),
-            
-            Text("Correo electrónico:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+
+            Text(
+              "Correo electrónico:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             Text("juan.perez@example.com", style: TextStyle(fontSize: 16)),
             SizedBox(height: 10),
-            
-            Text("Teléfono:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+
+            Text(
+              "Teléfono:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             Text("+123 456 789", style: TextStyle(fontSize: 16)),
             SizedBox(height: 20),
-            
+
             // Botón para editar perfil
             Center(
               child: ElevatedButton(
                 onPressed: () {
                   // Lógica para editar el perfil (puedes agregar más funcionalidad)
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Editando perfil...")));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text("Editando perfil...")));
                 },
                 child: Text("Editar Perfil"),
                 style: ElevatedButton.styleFrom(

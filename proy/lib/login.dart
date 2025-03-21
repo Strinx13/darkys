@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:mysql1/mysql1.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:proy/db_connection.dart';
+import 'package:provider/provider.dart';
+import 'package:proy/app_state.dart';
+import 'package:proy/mainScreen.dart';
 import 'register.dart';
-import 'main.dart';
-import'forgot_password.dart';
+import 'forgot_password.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -18,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _login() async {
     MySqlConnection? conn;
     try {
-      conn = await DatabaseHelper.connect(); // Se obtiene la conexión
+      conn = await DatabaseHelper.connect();
 
       var results = await conn.query(
         'SELECT password FROM ec_customers WHERE email = ?',
@@ -26,30 +28,44 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (results.isNotEmpty) {
-        var storedHashedPassword = results.first[0]; // Obtiene la contraseña encriptada
+        var storedHashedPassword = results.first[0];
         if (BCrypt.checkpw(_passwordController.text, storedHashedPassword)) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Inicio de sesión exitoso.'),
-          ));
-          Navigator.push(context, 
-          MaterialPageRoute(builder: (context) => HomeScreen()));
+          final appState = Provider.of<AppState>(context, listen: false);
+          final success = await appState.login(
+            _emailController.text,
+            _passwordController.text,
+          );
+
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Inicio de sesión exitoso.')),
+            );
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => MainScreen()),
+              (route) => false,
+            );
+          } else {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión.')));
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Correo o contraseña incorrectos.'),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Correo o contraseña incorrectos.')),
+          );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Correo o contraseña incorrectos.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Correo o contraseña incorrectos.')),
+        );
       }
-
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error de conexión: $e'),
-      ));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error de conexión: $e')));
     } finally {
-      await conn?.close(); // Se cierra la conexión
+      await conn?.close();
     }
   }
 
@@ -59,10 +75,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/fondo.jpg',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/fondo.jpg', fit: BoxFit.cover),
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -102,13 +115,19 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     SizedBox(height: 20),
                     _buildTextField(_emailController, 'Correo electrónico'),
-                    _buildTextField(_passwordController, 'Contraseña', obscureText: true),
+                    _buildTextField(
+                      _passwordController,
+                      'Contraseña',
+                      obscureText: true,
+                    ),
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _login,
                       child: Text('Iniciar sesión'),
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(Colors.blueAccent),
+                        backgroundColor: MaterialStateProperty.all(
+                          Colors.blueAccent,
+                        ),
                       ),
                     ),
                     SizedBox(height: 20),
@@ -116,7 +135,9 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                          MaterialPageRoute(
+                            builder: (context) => ForgotPasswordPage(),
+                          ),
                         );
                       },
                       child: Text(
@@ -128,7 +149,9 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => RegisterPage()),
+                          MaterialPageRoute(
+                            builder: (context) => RegisterPage(),
+                          ),
                         );
                       },
                       child: Text(
@@ -146,7 +169,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {bool obscureText = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    bool obscureText = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextField(
@@ -156,9 +183,7 @@ class _LoginPageState extends State<LoginPage> {
           labelText: label,
           fillColor: Colors.grey[800],
           filled: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30.0),
             borderSide: BorderSide(color: Colors.grey, width: 1),

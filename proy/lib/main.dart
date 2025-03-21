@@ -1,37 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:proy/app_state.dart';
 import 'package:proy/mainScreen.dart';
-import 'login.dart';
+import 'package:proy/login.dart';
+import 'package:proy/more_screen.dart';
 import 'product.dart';
 
-
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(create: (context) => AppState(), child: MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MainScreen(),
-    );
+    return MaterialApp(debugShowCheckedModeBanner: false, home: MainScreen());
   }
 }
 
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Darky´s', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Darky´s',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.verified_user),
+            icon: Icon(appState.isLoggedIn ? Icons.person : Icons.login),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
+              if (appState.isLoggedIn) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MoreScreen()),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                );
+              }
             },
           ),
         ],
@@ -49,7 +62,9 @@ class HomeScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: "Buscar...",
                 prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
             SizedBox(height: 20),
@@ -67,7 +82,14 @@ class HomeScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Descuentos", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Descuentos",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Text("Hasta 50%", style: TextStyle(color: Colors.white)),
                     ],
                   ),
@@ -89,54 +111,60 @@ class HomeScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Categorías", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  "Categorías",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 TextButton(onPressed: () {}, child: Text("Ver todo")),
               ],
             ),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: ["Todos", "Bettas", "Guppys", "Plecos", "Alimentos"]
-                    .map((category) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Chip(label: Text(category)),
-                        ))
-                    .toList(),
+                children:
+                    ["Todos", "Bettas", "Guppys", "Plecos", "Alimentos"]
+                        .map(
+                          (category) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Chip(label: Text(category)),
+                          ),
+                        )
+                        .toList(),
               ),
             ),
             SizedBox(height: 20),
 
             // Productos en cuadrícula
             GridView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: 4, // Puedes reemplazar con el total de productos
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductScreen()),
+                    );
+                  },
+                  child: ProductCard(
+                    title:
+                        index % 2 == 0
+                            ? "Guppy Metal Red Lace"
+                            : "Guppy Koi Red Ears",
+                    price: index % 2 == 0 ? "\$132.00" : "\$1100.00",
+                    imageUrl: "assets/Metal.jpg",
+                    inStock: index % 2 == 0, // Alternar stock
+                  ),
+                );
+              },
             ),
-            itemCount: 4, // Puedes reemplazar con el total de productos
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductScreen(),
-          ),
-        );
-      },
-      child: ProductCard(
-        title: index % 2 == 0 ? "Guppy Metal Red Lace" : "Guppy Koi Red Ears",
-        price: index % 2 == 0 ? "\$132.00" : "\$1100.00",
-        imageUrl: "assets/Metal.jpg",
-        inStock: index % 2 == 0, // Alternar stock
-      ),
-    );
-  },
-),
-
           ],
         ),
       ),
@@ -151,7 +179,12 @@ class ProductCard extends StatelessWidget {
   final String imageUrl;
   final bool inStock;
 
-  ProductCard({required this.title, required this.price, required this.imageUrl, required this.inStock});
+  ProductCard({
+    required this.title,
+    required this.price,
+    required this.imageUrl,
+    required this.inStock,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +210,7 @@ class ProductCard extends StatelessWidget {
               children: [
                 // Título
                 Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-                
+
                 SizedBox(height: 8),
 
                 // Precio
@@ -187,11 +220,14 @@ class ProductCard extends StatelessWidget {
 
                 // Botón de Stock
                 Container(
-                  width: 120, 
-                  height: 20, 
+                  width: 120,
+                  height: 20,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: inStock ? const Color.fromARGB(255, 157, 199, 158) : const Color.fromARGB(255, 236, 132, 125),
+                      backgroundColor:
+                          inStock
+                              ? const Color.fromARGB(255, 157, 199, 158)
+                              : const Color.fromARGB(255, 236, 132, 125),
                       foregroundColor: Colors.white,
                     ),
                     onPressed: () {},

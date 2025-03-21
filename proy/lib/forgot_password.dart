@@ -50,16 +50,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           allowInsecure: false, // Mantén en false para seguridad
         );
 
-        final message = Message()
-          ..from = Address('andres.santiago@gownetwork.com.mx', "Soporte")
-          ..recipients.add(_emailController.text)
-          ..subject = "Código de Recuperación"
-          ..text = "Tu código de recuperación es: $_generatedCode";
+        final message =
+            Message()
+              ..from = Address('andres.santiago@gownetwork.com.mx', "Soporte")
+              ..recipients.add(_emailController.text)
+              ..subject = "Código de Recuperación"
+              ..text = "Tu código de recuperación es: $_generatedCode";
 
         try {
           await send(message, smtpServer);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Código enviado al correo ${_emailController.text}')),
+            SnackBar(
+              content: Text(
+                'Código enviado al correo ${_emailController.text}',
+              ),
+            ),
           );
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -72,9 +77,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error de conexión: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error de conexión: $e')));
     } finally {
       await conn?.close();
     }
@@ -82,9 +87,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   Future<void> _resetPassword() async {
     if (_codeController.text != _generatedCode) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Código incorrecto')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Código incorrecto')));
       return;
     }
 
@@ -93,13 +98,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       conn = await DatabaseHelper.connect();
 
       // Encriptar nueva contraseña
-      String hashedPassword = BCrypt.hashpw(_passwordController.text, BCrypt.gensalt());
+      String hashedPassword = BCrypt.hashpw(
+        _passwordController.text,
+        BCrypt.gensalt(),
+      );
 
       // Actualizar la contraseña en la base de datos
-      await conn.query(
-        'UPDATE ec_customers SET password = ? WHERE email = ?',
-        [hashedPassword, _emailController.text],
-      );
+      await conn.query('UPDATE ec_customers SET password = ? WHERE email = ?', [
+        hashedPassword,
+        _emailController.text,
+      ]);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Contraseña actualizada con éxito')),
@@ -118,47 +126,135 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Recuperar Contraseña')),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _codeSent
-                ? Column(
-                    children: [
-                      TextField(
-                        controller: _codeController,
-                        decoration: InputDecoration(labelText: 'Código de verificación'),
-                        keyboardType: TextInputType.number,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/fondo.jpg', fit: BoxFit.cover),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              padding: EdgeInsets.all(16.0),
+              width: double.infinity,
+              height: 600,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30.0),
+                  topRight: Radius.circular(30.0),
+                ),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundImage: AssetImage('assets/logo.jpg'),
+                    ),
+                    SizedBox(height: 20),
+                    Divider(
+                      color: Colors.white,
+                      thickness: 2,
+                      indent: 50,
+                      endIndent: 50,
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Recuperar Contraseña',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
-                      TextField(
-                        controller: _passwordController,
-                        decoration: InputDecoration(labelText: 'Nueva contraseña'),
-                        obscureText: true,
+                    ),
+                    SizedBox(height: 20),
+                    _codeSent
+                        ? Column(
+                          children: [
+                            _buildTextField(
+                              _codeController,
+                              'Código de verificación',
+                            ),
+                            _buildTextField(
+                              _passwordController,
+                              'Nueva contraseña',
+                              obscureText: true,
+                            ),
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: _resetPassword,
+                              child: Text('Cambiar contraseña'),
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                  Colors.blueAccent,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                        : Column(
+                          children: [
+                            _buildTextField(
+                              _emailController,
+                              'Correo electrónico',
+                            ),
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: _sendCode,
+                              child: Text('Enviar código'),
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                  Colors.blueAccent,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        'Volver al inicio de sesión',
+                        style: TextStyle(color: Colors.blueAccent),
                       ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _resetPassword,
-                        child: Text('Cambiar contraseña'),
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      TextField(
-                        controller: _emailController,
-                        decoration: InputDecoration(labelText: 'Correo electrónico'),
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _sendCode,
-                        child: Text('Enviar código'),
-                      ),
-                    ],
-                  ),
-          ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    bool obscureText = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          labelText: label,
+          fillColor: Colors.grey[800],
+          filled: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30.0),
+            borderSide: BorderSide(color: Colors.grey, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30.0),
+            borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+          ),
         ),
+        style: TextStyle(color: Colors.white),
       ),
     );
   }
