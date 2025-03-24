@@ -3,6 +3,8 @@ import 'package:mysql1/mysql1.dart';
 import 'package:proy/db_connection.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:proy/app_state.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final Map<String, dynamic>? userData;
@@ -49,19 +51,25 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     MySqlConnection? conn;
     try {
       conn = await DatabaseHelper.connect();
+      final appState = Provider.of<AppState>(context, listen: false);
 
-      // TODO: Implementar la lógica para subir la imagen a un servidor
-      // y obtener la URL del avatar
+      if (appState.userId == null) {
+        throw Exception('No hay un usuario activo');
+      }
 
+      // Actualizamos los datos del usuario
       await conn.query(
         'UPDATE ec_customers SET name = ?, email = ?, phone = ? WHERE id = ?',
         [
           _nameController.text,
           _emailController.text,
           _phoneController.text,
-          9, // Aquí deberías usar el ID del usuario actual
+          appState.userId,
         ],
       );
+
+      // Actualizamos los datos en AppState
+      await appState.updateUserData();
 
       ScaffoldMessenger.of(
         context,
@@ -104,6 +112,16 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         _avatarPath != null
                             ? (_avatarPath!.startsWith('http')
                                 ? NetworkImage(_avatarPath!)
+                                : _avatarPath!.startsWith('/')
+                                ? NetworkImage(
+                                  'https://darkysfishshop.gownetwork.com.mx/storage' +
+                                      _avatarPath!,
+                                )
+                                : !_avatarPath!.startsWith('assets')
+                                ? NetworkImage(
+                                  'https://darkysfishshop.gownetwork.com.mx/storage/' +
+                                      _avatarPath!,
+                                )
                                 : FileImage(File(_avatarPath!))
                                     as ImageProvider)
                             : AssetImage('assets/logo.jpg'),

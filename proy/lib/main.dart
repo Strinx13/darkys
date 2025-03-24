@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proy/app_state.dart';
+import 'package:proy/models/cart_state.dart';
 import 'package:proy/mainScreen.dart';
 import 'package:proy/login.dart';
 import 'package:proy/more_screen.dart';
-import 'product.dart';
+import 'package:proy/models/product.dart';
+import 'package:mysql1/mysql1.dart';
+import 'package:proy/db_connection.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(create: (context) => AppState(), child: MyApp()),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AppState()),
+        ChangeNotifierProvider(create: (context) => CartState()),
+      ],
+      child: MyApp(),
+    ),
   );
 }
 
@@ -19,7 +28,96 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<Product> _featuredProducts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFeaturedProducts();
+  }
+
+  Future<void> _loadFeaturedProducts() async {
+    MySqlConnection? conn;
+    try {
+      print('Intentando conectar a la base de datos...');
+      conn = await DatabaseHelper.connect();
+      print('Conexión exitosa, ejecutando consulta...');
+
+      // Primero verificamos si hay productos en general
+      var testQuery = await conn.query(
+        'SELECT COUNT(*) as total FROM ec_products',
+      );
+      print('Total de productos en la base de datos: ${testQuery.first[0]}');
+
+      // Ahora la consulta específica
+      var results = await conn.query(
+        'SELECT id, name, description, images, price, status, quantity, is_featured FROM ec_products WHERE is_featured = 1',
+      );
+
+      print('Número de productos encontrados: ${results.length}');
+      for (var row in results) {
+        print('Producto encontrado:');
+        print('  ID: ${row[0]}');
+        print('  Nombre: ${row[1]}');
+        print('  Images: ${row[3]}');
+        print('  Status: ${row[5]}');
+        print('  Featured: ${row[7]}');
+      }
+
+      setState(() {
+        _featuredProducts =
+            results.map((row) {
+              String imageUrl = row[3].toString();
+              // Limpiamos la URL de caracteres especiales y formato JSON
+              imageUrl =
+                  imageUrl
+                      .replaceAll('[', '')
+                      .replaceAll(']', '')
+                      .replaceAll('"', '')
+                      .trim();
+
+              // Asegurarnos de que la URL sea absoluta
+              if (!imageUrl.startsWith('http')) {
+                imageUrl =
+                    'https://darkysfishshop.gownetwork.com.mx/storage/' +
+                    imageUrl;
+              }
+
+              print('URL procesada: $imageUrl'); // Debug log
+
+              return Product.fromMap({
+                'id': row[0],
+                'name': row[1],
+                'description': row[2],
+                'images': imageUrl,
+                'price': row[4],
+                'status': row[5],
+                'quantity': row[6],
+                'is_featured': row[7],
+              });
+            }).toList();
+        print('Productos cargados en el estado: ${_featuredProducts.length}');
+        _isLoading = false;
+      });
+    } catch (e, stackTrace) {
+      print('Error al cargar productos destacados:');
+      print('Error: $e');
+      print('Stack trace: $stackTrace');
+      setState(() {
+        _isLoading = false;
+      });
+    } finally {
+      await conn?.close();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
@@ -57,7 +155,6 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Barra de búsqueda
             TextField(
               decoration: InputDecoration(
                 hintText: "Buscar...",
@@ -68,8 +165,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-
-            // Sección de "Descuentos"
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -106,8 +201,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-
-            // Categorías
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -133,111 +226,166 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-
-            // Productos en cuadrícula
-            GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: 4, // Puedes reemplazar con el total de productos
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductScreen()),
-                    );
-                  },
-                  child: ProductCard(
-                    title:
-                        index % 2 == 0
-                            ? "Guppy Metal Red Lace"
-                            : "Guppy Koi Red Ears",
-                    price: index % 2 == 0 ? "\$132.00" : "\$1100.00",
-                    imageUrl: "assets/Metal.jpg",
-                    inStock: index % 2 == 0, // Alternar stock
-                  ),
-                );
-              },
+            Text(
+              'Productos Destacados',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
+            SizedBox(height: 16),
+            if (_isLoading)
+              Center(child: CircularProgressIndicator())
+            else if (_featuredProducts.isEmpty)
+              Center(child: Text('No hay productos destacados disponibles'))
+            else
+              GridView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.65,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: _featuredProducts.length,
+                itemBuilder: (context, index) {
+                  final product = _featuredProducts[index];
+                  return Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                          child: Image.network(
+                            product.images,
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('Error cargando imagen: $error');
+                              return Container(
+                                height: 120,
+                                color: Colors.grey[200],
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline,
+                                      color: Colors.red,
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Error al cargar imagen',
+                                      style: TextStyle(fontSize: 12),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                height: 120,
+                                color: Colors.grey[200],
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
+                                            : null,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  product.name,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '\$${product.price.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Spacer(),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      product.quantity > 0
+                                          ? 'En stock'
+                                          : 'Agotado',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color:
+                                            product.quantity > 0
+                                                ? Colors.green
+                                                : Colors.red,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.add_shopping_cart,
+                                        size: 20,
+                                      ),
+                                      padding: EdgeInsets.zero,
+                                      constraints: BoxConstraints(),
+                                      onPressed:
+                                          product.quantity > 0
+                                              ? () {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'Producto agregado al carrito',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                              : null,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Tarjeta de Producto con stock
-class ProductCard extends StatelessWidget {
-  final String title;
-  final String price;
-  final String imageUrl;
-  final bool inStock;
-
-  ProductCard({
-    required this.title,
-    required this.price,
-    required this.imageUrl,
-    required this.inStock,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-            child: Image.asset(
-              imageUrl,
-              width: double.infinity,
-              height: 120,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Título
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-
-                SizedBox(height: 8),
-
-                // Precio
-                Text(price, style: TextStyle(color: Colors.red, fontSize: 16)),
-
-                SizedBox(height: 0),
-
-                // Botón de Stock
-                Container(
-                  width: 120,
-                  height: 20,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          inStock
-                              ? const Color.fromARGB(255, 157, 199, 158)
-                              : const Color.fromARGB(255, 236, 132, 125),
-                      foregroundColor: Colors.white,
-                    ),
-                    onPressed: () {},
-                    child: Text(inStock ? "En Stock" : "Agotado"),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

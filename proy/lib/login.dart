@@ -16,6 +16,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _rememberMe = false;
 
   Future<void> _login() async {
     MySqlConnection? conn;
@@ -34,6 +35,7 @@ class _LoginPageState extends State<LoginPage> {
           final success = await appState.login(
             _emailController.text,
             _passwordController.text,
+            rememberMe: _rememberMe,
           );
 
           if (success) {
@@ -61,9 +63,10 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } catch (e) {
+      print('Error en login: $e');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error de conexión: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión: $e')));
     } finally {
       await conn?.close();
     }
@@ -120,6 +123,33 @@ class _LoginPageState extends State<LoginPage> {
                       'Contraseña',
                       obscureText: true,
                     ),
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: _rememberMe,
+                            onChanged: (value) {
+                              setState(() {
+                                _rememberMe = value ?? false;
+                              });
+                            },
+                            fillColor: MaterialStateProperty.resolveWith<Color>(
+                              (Set<MaterialState> states) {
+                                if (states.contains(MaterialState.selected)) {
+                                  return Colors.blue;
+                                }
+                                return Colors.white;
+                              },
+                            ),
+                          ),
+                          Text(
+                            'Recuérdame',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _login,
@@ -142,7 +172,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                       child: Text(
                         '¿Olvidaste tu contraseña?',
-                        style: TextStyle(color: Colors.blueAccent),
+                        style: TextStyle(color: Colors.white70),
                       ),
                     ),
                     TextButton(
@@ -156,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                       child: Text(
                         '¿No tienes una cuenta? Regístrate aquí',
-                        style: TextStyle(color: Colors.blueAccent),
+                        style: TextStyle(color: Colors.white70),
                       ),
                     ),
                   ],
@@ -174,26 +204,24 @@ class _LoginPageState extends State<LoginPage> {
     String label, {
     bool obscureText = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
+        style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
-          fillColor: Colors.grey[800],
-          filled: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0)),
+          labelStyle: TextStyle(color: Colors.white70),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0),
-            borderSide: BorderSide(color: Colors.grey, width: 1),
+            borderSide: BorderSide(color: Colors.white54),
+            borderRadius: BorderRadius.circular(10),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0),
-            borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+            borderSide: BorderSide(color: Colors.white),
+            borderRadius: BorderRadius.circular(10),
           ),
         ),
-        style: TextStyle(color: Colors.white),
       ),
     );
   }

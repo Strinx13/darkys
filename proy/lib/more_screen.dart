@@ -24,29 +24,9 @@ class _MoreScreenState extends State<MoreScreen> {
     final appState = Provider.of<AppState>(context, listen: false);
     if (!appState.isLoggedIn) return;
 
-    MySqlConnection? conn;
-    try {
-      conn = await DatabaseHelper.connect();
-      var results = await conn.query(
-        'SELECT name, email, phone, avatar FROM ec_customers WHERE id = ?',
-        [1], // Aquí deberías usar el ID del usuario actual desde appState
-      );
-
-      if (results.isNotEmpty) {
-        setState(() {
-          userData = {
-            'name': results.first['name'],
-            'email': results.first['email'],
-            'phone': results.first['phone'],
-            'avatar': results.first['avatar'],
-          };
-        });
-      }
-    } catch (e) {
-      print('Error al cargar datos del usuario: $e');
-    } finally {
-      await conn?.close();
-    }
+    setState(() {
+      userData = appState.userData;
+    });
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -73,7 +53,7 @@ class _MoreScreenState extends State<MoreScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Más',
+          'Configuracion',
           style: TextStyle(
             color: Colors.black,
             fontSize: 20,
@@ -107,7 +87,14 @@ class _MoreScreenState extends State<MoreScreen> {
                       radius: 30,
                       backgroundImage:
                           userData?['avatar'] != null
-                              ? NetworkImage(userData!['avatar'])
+                              ? NetworkImage(
+                                userData!['avatar'].toString().startsWith(
+                                      'http',
+                                    )
+                                    ? userData!['avatar']
+                                    : 'https://darkysfishshop.gownetwork.com.mx/storage/' +
+                                        userData!['avatar'],
+                              )
                               : AssetImage('assets/logo.jpg') as ImageProvider,
                     ),
                     SizedBox(width: 15),
@@ -157,34 +144,52 @@ class _MoreScreenState extends State<MoreScreen> {
               onTap: () {},
             ),
             _buildOptionItem(
-              icon: Icons.notifications_outlined,
-              title: 'Notificaciones',
-              subtitle: 'Gestiona tus notificaciones',
-              onTap: () {},
-            ),
-            _buildOptionItem(
-              icon: Icons.security_outlined,
-              title: 'Privacidad y seguridad',
-              subtitle: 'Gestiona tus preferencias de privacidad',
-              onTap: () {},
-            ),
-            _buildOptionItem(
-              icon: Icons.help_outline,
-              title: 'Ayuda y soporte',
-              subtitle: 'Obtén ayuda y contáctanos',
-              onTap: () {},
-            ),
-            _buildOptionItem(
-              icon: Icons.info_outline,
-              title: 'Acerca de nosotros',
-              subtitle: 'Lee más sobre nuestra app',
-              onTap: () {},
-            ),
-            _buildOptionItem(
               icon: Icons.logout,
               title: 'Cerrar sesión',
               subtitle: 'Salir de esta cuenta',
-              onTap: () => _logout(context),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Cerrar Sesión'),
+                      content: Text('¿Estás seguro que deseas cerrar sesión?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            Navigator.pop(context); // Cerrar el diálogo
+                            final appState = Provider.of<AppState>(
+                              context,
+                              listen: false,
+                            );
+                            await appState.logout();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Sesión cerrada exitosamente'),
+                              ),
+                            );
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MainScreen(),
+                              ),
+                              (route) => false,
+                            );
+                          },
+                          child: Text(
+                            'Cerrar Sesión',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),
@@ -212,7 +217,7 @@ class _MoreScreenState extends State<MoreScreen> {
         ],
       ),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blue),
+        leading: Icon(icon, color: Colors.red),
         title: Text(
           title,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
