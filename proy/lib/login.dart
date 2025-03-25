@@ -23,6 +23,39 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
 
   Future<void> _login() async {
+    // Validar campos vacíos
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Por favor, ingresa tu correo electrónico'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Por favor, ingresa tu contraseña'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validar formato de correo electrónico
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(_emailController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Por favor, ingresa un correo electrónico válido'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     MySqlConnection? conn;
     try {
       conn = await DatabaseHelper.connect();
@@ -93,116 +126,108 @@ class _LoginPageState extends State<LoginPage> {
             child: Image.asset('assets/fondo.jpg', fit: BoxFit.cover),
           ),
           Align(
-            alignment: Alignment.bottomCenter,
+            alignment: Alignment.center,
             child: Container(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
               width: double.infinity,
-              height: 600,
+              margin: EdgeInsets.symmetric(horizontal: 24.0),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30.0),
-                  topRight: Radius.circular(30.0),
-                ),
+                color: Colors.black.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(30.0),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: AssetImage('assets/logo.jpg'),
-                    ),
-                    SizedBox(height: 20),
-                    Divider(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: AssetImage('assets/logo.jpg'),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Iniciar sesión',
+                    style: TextStyle(
                       color: Colors.white,
-                      thickness: 2,
-                      indent: 50,
-                      endIndent: 50,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Iniciar sesión',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    _buildTextField(_emailController, 'Correo electrónico'),
-                    _buildTextField(
-                      _passwordController,
-                      'Contraseña',
-                      obscureText: true,
-                    ),
-                    Container(
-                      margin: EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: _rememberMe,
-                            onChanged: (value) {
-                              setState(() {
-                                _rememberMe = value ?? false;
-                              });
-                            },
-                            fillColor: MaterialStateProperty.resolveWith<Color>(
-                              (Set<MaterialState> states) {
-                                if (states.contains(MaterialState.selected)) {
-                                  return Colors.blue;
-                                }
-                                return Colors.white;
-                              },
-                            ),
-                          ),
-                          Text(
-                            'Recuérdame',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _login,
-                      child: Text('Iniciar sesión'),
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                          Colors.blueAccent,
+                  ),
+                  SizedBox(height: 16),
+                  _buildTextField(_emailController, 'Correo electrónico'),
+                  SizedBox(height: 8),
+                  _buildTextField(
+                    _passwordController,
+                    'Contraseña',
+                    obscureText: true,
+                  ),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) {
+                          setState(() {
+                            _rememberMe = value ?? false;
+                          });
+                        },
+                        fillColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return Colors.blue;
+                            }
+                            return Colors.white;
+                          },
                         ),
                       ),
-                    ),
-                    SizedBox(height: 20),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ForgotPasswordPage(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        '¿Olvidaste tu contraseña?',
-                        style: TextStyle(color: Colors.white70),
+                      Text(
+                        'Recuérdame',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      minimumSize: Size(double.infinity, 45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RegisterPage(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        '¿No tienes una cuenta? Regístrate aquí',
-                        style: TextStyle(color: Colors.white70),
-                      ),
+                    child: Text(
+                      'Iniciar sesión',
+                      style: TextStyle(fontSize: 16),
                     ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ForgotPasswordPage(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      '¿Olvidaste tu contraseña?',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RegisterPage(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      '¿No tienes una cuenta? Regístrate aquí',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

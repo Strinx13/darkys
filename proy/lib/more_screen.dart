@@ -222,13 +222,6 @@ class _MoreScreenState extends State<MoreScreen> {
                 );
               },
             ),
-
-            _buildOptionItem(
-              icon: Icons.payment_outlined,
-              title: 'Metodos de pago',
-              subtitle: 'Gestiona tus metodos de pago',
-              onTap: () {},
-            ),
             _buildOptionItem(
               icon: Icons.logout,
               title: 'Cerrar sesión',

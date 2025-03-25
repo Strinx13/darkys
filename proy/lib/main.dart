@@ -11,6 +11,7 @@ import 'package:proy/db_connection.dart';
 import 'dart:async';
 import 'package:proy/catalog.dart';
 import 'package:proy/product.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 void main() {
   runApp(
@@ -184,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Darky´s',
+          'Darky´s Fish Shop',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -211,13 +212,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Barra de búsqueda
-                TextField(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Barra de búsqueda
+              Padding(
+                padding: EdgeInsets.all(16.0),
+                child: TextField(
                   controller: _searchController,
                   onChanged: _onSearchChanged,
                   decoration: InputDecoration(
@@ -241,261 +242,391 @@ class _HomeScreenState extends State<HomeScreen> {
                         EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   ),
                 ),
-                SizedBox(height: 20),
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF77272),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Descuentos",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text("Hasta 50%",
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(
-                          'assets/full.jpg',
-                          width: 120,
-                          height: 120,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ],
-                  ),
+              ),
+              // Carrusel
+              CarouselSlider(
+                options: CarouselOptions(
+                  height: 200.0,
+                  aspectRatio: 16/9,
+                  viewportFraction: 0.9,
+                  initialPage: 0,
+                  enableInfiniteScroll: true,
+                  reverse: false,
+                  autoPlay: true,
+                  autoPlayInterval: Duration(seconds: 3),
+                  autoPlayAnimationDuration: Duration(milliseconds: 800),
+                  autoPlayCurve: Curves.fastOutSlowIn,
+                  enlargeCenterPage: true,
+                  scrollDirection: Axis.horizontal,
                 ),
-                SizedBox(height: 20),
-                Row(
+                items: [
+                  _buildCarouselItem(
+                    'https://darkysfishshop.gownetwork.com.mx/storage/guppyd/476440798-1852734632209858-1377388764678931715-n.jpg',
+                    'Peces Betta',
+                    'Los más hermosos especímenes',
+                    Colors.indigo.shade700,
+                    isNetworkImage: true,
+                  ),
+                  _buildCarouselItem(
+                    'https://darkysfishshop.gownetwork.com.mx/storage/guppyd/imagen-de-whatsapp-2025-01-29-a-las-090020-b452c174.jpg',
+                    'Peces Guppy',
+                    'Variedad de colores',
+                    Colors.blue.shade700,
+                    isNetworkImage: true,
+                  ),
+                  _buildCarouselItem(
+                    'https://darkysfishshop.gownetwork.com.mx/storage/guppyd/acuario-en-casa-iluminacion.jpg',
+                    'Acuarios',
+                    'Todo para tu pecera',
+                    Colors.teal.shade700,
+                    isNetworkImage: true,
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       "Categorías",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => CatalogScreen()),
-                          );
-                        },
-                        child: Text("Ver todo")),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CatalogScreen()),
+                        );
+                      },
+                      child: Text("Ver todo"),
+                    ),
                   ],
                 ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _categories.map((category) {
-                      final isSelected =
-                          category['id'].toString() == _selectedCategory;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: FilterChip(
-                          selected: isSelected,
-                          label: Text(category['name']),
-                          onSelected: (bool selected) {
-                            setState(() {
-                              _selectedCategory = category['id'].toString();
-                              _loadFeaturedProducts();
-                            });
-                          },
-                          selectedColor: Colors.red[100],
-                          checkmarkColor: Colors.red,
-                        ),
-                      );
-                    }).toList(),
+              ),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _categories.map((category) {
+                    final isSelected =
+                        category['id'].toString() == _selectedCategory;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: FilterChip(
+                        selected: isSelected,
+                        label: Text(category['name']),
+                        onSelected: (bool selected) {
+                          setState(() {
+                            _selectedCategory = category['id'].toString();
+                            _loadFeaturedProducts();
+                          });
+                        },
+                        selectedColor: Colors.red[100],
+                        checkmarkColor: Colors.red,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                _selectedCategory == '0'
+                    ? ' Productos Destacados'
+                    : _categories.any((cat) =>
+                            cat['id'].toString() == _selectedCategory)
+                        ? 'Productos Destacados en ${_categories.firstWhere((cat) => cat['id'].toString() == _selectedCategory)['name']}'
+                        : 'Productos Destacados',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              if (_isLoading)
+                Center(child: CircularProgressIndicator())
+              else if (_featuredProducts.isEmpty)
+                Center(child: Text('No hay productos destacados disponibles'))
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.65,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
                   ),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  _selectedCategory == '0'
-                      ? 'Productos Destacados'
-                      : _categories.any((cat) =>
-                              cat['id'].toString() == _selectedCategory)
-                          ? 'Productos Destacados en ${_categories.firstWhere((cat) => cat['id'].toString() == _selectedCategory)['name']}'
-                          : 'Productos Destacados',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 16),
-                if (_isLoading)
-                  Center(child: CircularProgressIndicator())
-                else if (_featuredProducts.isEmpty)
-                  Center(child: Text('No hay productos destacados disponibles'))
-                else
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.65,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: _featuredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _featuredProducts[index];
-                      return Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(12),
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ProductScreen(product: product),
-                                    ),
-                                  );
-                                },
-                                child: Image.network(
-                                  product.images,
-                                  height: 120,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    print('Error cargando imagen: $error');
-                                    return Container(
-                                      height: 120,
-                                      color: Colors.grey[200],
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.error_outline,
-                                            color: Colors.red,
-                                          ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            'Error al cargar imagen',
-                                            style: TextStyle(fontSize: 12),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
+                  itemCount: _featuredProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = _featuredProducts[index];
+                    return Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(12),
                             ),
-                            Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      product.name,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      '\$${product.price.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Spacer(),
-                                    Row(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProductScreen(product: product),
+                                  ),
+                                );
+                              },
+                              child: Image.network(
+                                product.images,
+                                height: 120,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  print('Error cargando imagen: $error');
+                                  return Container(
+                                    height: 120,
+                                    color: Colors.grey[200],
+                                    child: Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Text(
-                                          product.quantity > 0
-                                              ? 'En stock'
-                                              : 'Bajo pedido',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: product.quantity > 0
-                                                ? Colors.green
-                                                : Colors.orange,
-                                          ),
+                                        Icon(
+                                          Icons.error_outline,
+                                          color: Colors.red,
                                         ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.add_shopping_cart,
-                                            size: 20,
-                                          ),
-                                          padding: EdgeInsets.zero,
-                                          constraints: BoxConstraints(),
-                                          onPressed: () {
-                                            final cart = Provider.of<CartState>(
-                                              context,
-                                              listen: false,
-                                            );
-                                            cart.addItem(
-                                              product.id,
-                                              product.name,
-                                              product.price,
-                                              product.images,
-                                            );
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Producto agregado al carrito',
-                                                ),
-                                                duration: Duration(seconds: 2),
-                                                action: SnackBarAction(
-                                                  label: 'Ver Carrito',
-                                                  onPressed: () {
-                                                    Navigator.pushNamed(
-                                                        context, '/cart');
-                                                  },
-                                                ),
-                                              ),
-                                            );
-                                          },
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'Error al cargar imagen',
+                                          style: TextStyle(fontSize: 12),
+                                          textAlign: TextAlign.center,
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
                             ),
-                          ],
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product.name,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    '\$${product.price.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        product.quantity > 0
+                                            ? 'En stock'
+                                            : 'Bajo pedido',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: product.quantity > 0
+                                              ? Colors.green
+                                              : Colors.orange,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.add_shopping_cart,
+                                          size: 20,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        constraints: BoxConstraints(),
+                                        onPressed: () {
+                                          final cart = Provider.of<CartState>(
+                                            context,
+                                            listen: false,
+                                          );
+                                          cart.addItem(
+                                            product.id,
+                                            product.name,
+                                            product.price,
+                                            product.images,
+                                          );
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Producto agregado al carrito',
+                                              ),
+                                              duration: Duration(seconds: 2),
+                                              action: SnackBarAction(
+                                                label: 'Ver Carrito',
+                                                onPressed: () {
+                                                  Navigator.pushNamed(
+                                                      context, '/cart');
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCarouselItem(String imagePath, String title, String subtitle, Color color, {bool isNetworkImage = false}) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 5.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            color,
+            color.withOpacity(0.8),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            offset: Offset(0, 2),
+            blurRadius: 6.0,
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: isNetworkImage
+                ? Image.network(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Error cargando imagen del carrusel: $error');
+                      return Container(
+                        color: color,
+                        child: Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            color: Colors.white,
+                            size: 50,
+                          ),
                         ),
                       );
                     },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: color,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                : Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
                   ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.7),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 10.0,
+                        color: Colors.black,
+                        offset: Offset(2.0, 2.0),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 8.0,
+                        color: Colors.black,
+                        offset: Offset(2.0, 2.0),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -24,6 +24,29 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Future<void> _sendCode() async {
+    // Validar campo de correo vacío
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Por favor, ingresa tu correo electrónico'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validar formato de correo electrónico
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(_emailController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Por favor, ingresa un correo electrónico válido'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     MySqlConnection? conn;
     try {
       conn = await DatabaseHelper.connect();
@@ -86,10 +109,46 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Future<void> _resetPassword() async {
+    // Validar código vacío
+    if (_codeController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Por favor, ingresa el código de verificación'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validar contraseña vacía
+    if (_passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Por favor, ingresa la nueva contraseña'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validar longitud mínima de contraseña
+    if (_passwordController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('La contraseña debe tener al menos 6 caracteres'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (_codeController.text != _generatedCode) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Código incorrecto')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Código incorrecto'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -132,49 +191,40 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             child: Image.asset('assets/fondo.jpg', fit: BoxFit.cover),
           ),
           Align(
-            alignment: Alignment.bottomCenter,
+            alignment: Alignment.center,
             child: Container(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
               width: double.infinity,
-              height: 600,
+              margin: EdgeInsets.symmetric(horizontal: 24.0),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30.0),
-                  topRight: Radius.circular(30.0),
-                ),
+                color: Colors.black.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(30.0),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: AssetImage('assets/logo.jpg'),
-                    ),
-                    SizedBox(height: 20),
-                    Divider(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: AssetImage('assets/logo.jpg'),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Recuperar Contraseña',
+                    style: TextStyle(
                       color: Colors.white,
-                      thickness: 2,
-                      indent: 50,
-                      endIndent: 50,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Recuperar Contraseña',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    _codeSent
-                        ? Column(
+                  ),
+                  SizedBox(height: 20),
+                  _codeSent
+                      ? Column(
                           children: [
                             _buildTextField(
                               _codeController,
                               'Código de verificación',
                             ),
+                            SizedBox(height: 8),
                             _buildTextField(
                               _passwordController,
                               'Nueva contraseña',
@@ -183,16 +233,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             SizedBox(height: 20),
                             ElevatedButton(
                               onPressed: _resetPassword,
-                              child: Text('Cambiar contraseña'),
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all(
-                                  Colors.blueAccent,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                minimumSize: Size(double.infinity, 45),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
+                              ),
+                              child: Text(
+                                'Cambiar contraseña',
+                                style: TextStyle(fontSize: 16),
                               ),
                             ),
                           ],
                         )
-                        : Column(
+                      : Column(
                           children: [
                             _buildTextField(
                               _emailController,
@@ -201,27 +256,31 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             SizedBox(height: 20),
                             ElevatedButton(
                               onPressed: _sendCode,
-                              child: Text('Enviar código'),
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all(
-                                  Colors.blueAccent,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                minimumSize: Size(double.infinity, 45),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
+                              ),
+                              child: Text(
+                                'Enviar código',
+                                style: TextStyle(fontSize: 16),
                               ),
                             ),
                           ],
                         ),
-                    SizedBox(height: 20),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Volver al inicio de sesión',
-                        style: TextStyle(color: Colors.blueAccent),
-                      ),
+                  SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      'Volver al inicio de sesión',
+                      style: TextStyle(color: Colors.white70),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -235,26 +294,26 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     String label, {
     bool obscureText = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
+        style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
-          fillColor: Colors.grey[800],
-          filled: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0)),
+          labelStyle: TextStyle(color: Colors.white70),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0),
-            borderSide: BorderSide(color: Colors.grey, width: 1),
+            borderSide: BorderSide(color: Colors.white54),
+            borderRadius: BorderRadius.circular(10),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0),
-            borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+            borderSide: BorderSide(color: Colors.white),
+            borderRadius: BorderRadius.circular(10),
           ),
+          filled: true,
+          fillColor: Colors.black45,
         ),
-        style: TextStyle(color: Colors.white),
       ),
     );
   }
