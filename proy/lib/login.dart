@@ -9,6 +9,10 @@ import 'register.dart';
 import 'forgot_password.dart';
 
 class LoginPage extends StatefulWidget {
+  final Widget? returnTo;
+  
+  const LoginPage({Key? key, this.returnTo}) : super(key: key);
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -42,15 +46,23 @@ class _LoginPageState extends State<LoginPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Inicio de sesión exitoso.')),
             );
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => MainScreen()),
-              (route) => false,
-            );
+            
+            if (widget.returnTo != null) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => widget.returnTo!),
+              );
+            } else {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => MainScreen()),
+                (route) => false,
+              );
+            }
           } else {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión.')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error al iniciar sesión.')),
+            );
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -64,9 +76,9 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       print('Error en login: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al iniciar sesión: $e')),
+      );
     } finally {
       await conn?.close();
     }
