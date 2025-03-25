@@ -1,37 +1,69 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ProductScreen(),
-    );
-  }
-}
+import 'package:proy/models/product.dart';
+import 'package:provider/provider.dart';
+import 'package:proy/models/cart_state.dart';
 
 class ProductScreen extends StatelessWidget {
+  final Product product;
+
+  const ProductScreen({Key? key, required this.product}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[200],
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Column(
         children: [
           // Imagen del producto
           Container(
             height: 300,
-            child: PageView(
-              children: [
-                Image.asset('assets/Koi.jpg', fit: BoxFit.cover),
-                Image.asset('assets/Koi.jpg', fit: BoxFit.cover),
-              ],
+            width: double.infinity,
+            child: Image.network(
+              product.images,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                print('Error cargando imagen: $error');
+                return Container(
+                  color: Colors.grey[300],
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 50, color: Colors.red),
+                      SizedBox(height: 10),
+                      Text(
+                        'Error al cargar la imagen',
+                        style: TextStyle(color: Colors.red[700]),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  color: Colors.grey[200],
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                      color: Colors.red,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-                    
+
           // Detalles del producto
           Expanded(
             child: Container(
@@ -42,62 +74,118 @@ class ProductScreen extends StatelessWidget {
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, -5),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Shopping",
-                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    "AKG N700NCM2",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    "Hi-Fi Shop & Service Rustaveli Ave 57.\nThis shop offers both products and services",
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
-                  SizedBox(height: 10),
-                  
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.location_on, color: Colors.blue),
-                      SizedBox(width: 5),
-                      Text("Rustaveli Ave 57, 17-001, Batumi"),
-                    ],
-                  ),
-
-                  SizedBox(height: 20),
-                  
-                  Text(
-                    "\$199.00",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    "Tax Rate 2% - \$4.00 (~\$195.00)",
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-
-                  Spacer(),
-
-                  // Botón de compra
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                      Expanded(
+                        child: Text(
+                          product.name,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: product.quantity > 0
+                              ? Colors.green[100]
+                              : Colors.orange[100],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          product.quantity > 0 ? 'En stock' : 'Bajo pedido',
+                          style: TextStyle(
+                            color: product.quantity > 0
+                                ? Colors.green[900]
+                                : Colors.orange[900],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    '\$${product.price.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Descripción',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
                       child: Text(
-                        "ADD TO CART",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        product.description,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      final cart =
+                          Provider.of<CartState>(context, listen: false);
+                      cart.addItem(
+                        product.id,
+                        product.name,
+                        product.price,
+                        product.images,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Producto agregado al carrito'),
+                          duration: Duration(seconds: 2),
+                          action: SnackBarAction(
+                            label: 'Ver Carrito',
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/cart');
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.shopping_cart),
+                        SizedBox(width: 10),
+                        Text('Agregar al carrito'),
+                      ],
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),

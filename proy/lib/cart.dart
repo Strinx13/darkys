@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proy/models/cart_state.dart';
+import 'package:proy/mainScreen.dart';
 import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartState>(context);
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        backgroundColor: Colors.white,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => MainScreen(initialIndex: 0)),
+              );
+            }
+          },
         ),
         title: Text(
           'Carrito de Compras',
@@ -194,17 +207,16 @@ class CartScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed:
-                            cart.itemCount > 0
-                                ? () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => CheckoutScreen(),
-                                    ),
-                                  );
-                                }
-                                : null,
+                        onPressed: cart.itemCount > 0
+                            ? () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CheckoutScreen(),
+                                  ),
+                                );
+                              }
+                            : null,
                         child: Text('Proceder al Pago'),
                         style: ElevatedButton.styleFrom(
                           minimumSize: Size(double.infinity, 50),
