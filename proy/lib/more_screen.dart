@@ -7,6 +7,7 @@ import 'package:proy/mainScreen.dart';
 import 'profile_edit_screen.dart';
 import 'package:proy/models/shipping_address.dart';
 import 'package:proy/screens/address_form_screen.dart';
+import 'package:proy/screens/order_list_screen.dart';
 
 class MoreScreen extends StatefulWidget {
   @override
@@ -208,7 +209,18 @@ class _MoreScreenState extends State<MoreScreen> {
               icon: Icons.shopping_bag_outlined,
               title: 'Mis Ordenes',
               subtitle: 'Revisa tus ordenes',
-              onTap: () {},
+              onTap: () {
+                if (!Provider.of<AppState>(context, listen: false).isLoggedIn) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Debes iniciar sesión primero')),
+                  );
+                  return;
+                }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => OrderListScreen()),
+                );
+              },
             ),
 
             _buildOptionItem(

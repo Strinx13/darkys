@@ -322,32 +322,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         onGenerateRoute: (settings) {
           return MaterialPageRoute(
             builder: (context) => Scaffold(
-              backgroundColor: Colors.white,
-              appBar: AppBar(
-                elevation: 0,
-                backgroundColor: Colors.white,
-                leading: IconButton(
-                  icon: Icon(Icons.arrow_back, color: Colors.black),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                title: Text(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
                   'Checkout con PayPal',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              body: SingleChildScrollView(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
                     // Sección de dirección de envío
-                    Text(
+            Text(
                       'Dirección de envío',
-                      style: TextStyle(
+              style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -439,7 +439,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               title: Text(address.name),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
+              children: [
                                   Text(address.address),
                                   if (address.city != null || address.state != null)
                                     Text('${address.city ?? ''}, ${address.state ?? ''}'),
@@ -473,58 +473,58 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 }
                               },
                               child: Text('Agregar nueva dirección'),
-                            ),
-                          ],
-                        ),
+                ),
+              ],
+            ),
                       ),
                     SizedBox(height: 32),
 
                     // Resumen del carrito
-                    Text(
+            Text(
                       'Resumen del pedido',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 20),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 20),
                     // Lista de productos
                     ...cart.items.values.map((item) => Container(
                       padding: EdgeInsets.symmetric(vertical: 8),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
                           Expanded(
                             child: Text(
                               '${item.quantity}x ${item.name}',
                               style: TextStyle(fontSize: 16),
                             ),
-                          ),
-                          Text(
+                  ),
+                  Text(
                             '\$${(item.price * item.quantity).toStringAsFixed(2)}',
-                            style: TextStyle(
+                    style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    ),
+                  ),
                         ],
                       ),
                     )).toList(),
                     Divider(height: 32),
                     // Total
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
                           'Total',
-                          style: TextStyle(
+                        style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
-                        ),
-                        Text(
+                      ),
+                      Text(
                           '\$${cart.totalAmount.toStringAsFixed(2)}',
-                          style: TextStyle(
+                        style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.blue,
@@ -559,16 +559,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               color: Colors.grey[600],
                               fontSize: 14,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 40),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 40),
 
-                    // Botón de pago
-                    Container(
-                      width: double.infinity,
-                      child: ElevatedButton(
+            // Botón de pago
+            Container(
+              width: double.infinity,
+              child: ElevatedButton(
                         onPressed: _isLoading ? null : () => _processPaypalPayment(context, cart),
                         child: _isLoading
                             ? Row(
@@ -588,25 +588,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               )
                             : Text(
                                 'Pagar con PayPal',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                        style: ElevatedButton.styleFrom(
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF0070BA),
-                          padding: EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  padding: EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
               ),
             ),
-          );
+          ],
+                ),
+        ),
+      ),
+    );
         },
       ),
     );
